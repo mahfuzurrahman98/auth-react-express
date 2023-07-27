@@ -1,4 +1,5 @@
 // Login.js
+import axios from 'axios';
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add the useHistory hook
 import { UserContext } from '../App';
@@ -11,27 +12,33 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await (
-      await fetch('http://127.0.0.1:4000/login', {
-        method: 'POST',
-        credentials: 'include', // Needed to include the cookie
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:4000/login',
+        {
           email: email,
           password: password,
-        }),
-      })
-    ).json();
+        },
+        {
+          withCredentials: true, // Needed to include the cookie
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-    if (result.accesstoken) {
-      setUser({
-        accesstoken: result.accesstoken,
-      });
-      navigate('/'); // Navigate to the home page
-    } else {
-      console.log(result.error);
+      const result = response.data;
+
+      if (result.accesstoken) {
+        setUser({
+          accesstoken: result.accesstoken,
+        });
+        navigate('/');
+      } else {
+        console.log(result.error);
+      }
+    } catch (error) {
+      // Handle errors, e.g., set an error state or show an error message
     }
   };
 

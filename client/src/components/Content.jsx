@@ -1,13 +1,17 @@
 // Content.js
-import React, { useContext } from 'react';
-import { redirect } from 'react-router-dom'; // Change the import statement
+import { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
 import { UserContext } from '../App';
 
 const Content = () => {
-  // Could have something here to check for the time when the accesstoken expires
-  // and then call the refresh_token endpoint to get a new accesstoken automatically
   const [user] = useContext(UserContext);
-  if (!user.accesstoken) return redirect('/login'); // Change the Redirect component usage
+
+  console.log('token:', user.accesstoken);
+  if (!user.accesstoken) {
+    // console.log('No token found.');
+    return <Navigate replace to="/login" />;
+    // window.location.href = '/login';
+  }
   return <div>This is the content.</div>;
 };
 

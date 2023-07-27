@@ -13,12 +13,6 @@ const {
 const { fakeDB } = require('./fakeDB.js');
 const { isAuth } = require('./isAuth.js');
 
-// 1. Register a user
-// 2. Login a user
-// 3. Logout a user
-// 4. Setup a protected route
-// 5. Get a new accesstoken with a refresh token
-
 const server = express();
 
 server.use(cookieParser());
@@ -78,9 +72,6 @@ server.post('/login', async (req, res) => {
     // 3. Create Refresh- and Accesstoken
     const accesstoken = createAccessToken(user.id);
     const refreshtoken = createRefreshToken(user.id);
-    // 4. Store Refreshtoken with user in "db"
-    // Could also use different version numbers instead.
-    // Then just increase the version number on the revoke endpoint
     user.refreshtoken = refreshtoken;
     // 5. Send token. Refreshtoken as a cookie and accesstoken as a regular response
     sendRefreshToken(res, refreshtoken);
@@ -101,13 +92,14 @@ server.post('/logout', (_req, res) => {
   });
 });
 
-// 4. Protected route
-server.post('/protected', async (req, res) => {
+// 4. Protected route home
+server.post('/profile', async (req, res) => {
   try {
     const userId = isAuth(req);
     if (userId !== null) {
+      user = fakeDB.find((user) => user.id === userId);
       res.send({
-        data: 'This is protected data.',
+        data: user.email,
       });
     }
   } catch (err) {

@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,24 +9,29 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await (
-      await fetch('http://127.0.0.1:4000/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:4000/register',
+        {
           email: email,
           password: password,
-        }),
-      })
-    ).json();
-    if (!result.error) {
-      console.log(result.message);
-      // navigate to '/' now
-      navigate('/');
-    } else {
-      console.log(result.error);
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = response.data;
+      if (!result.error) {
+        console.log(result.message);
+        navigate('/');
+      } else {
+        console.log(result.error);
+      }
+    } catch (error) {
+      // Handle errors, e.g., set an error state or show an error message
     }
   };
 

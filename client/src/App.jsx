@@ -1,10 +1,11 @@
+import axios from 'axios';
 import { createContext, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Content from './components/Content';
 import Login from './components/Login';
 import Navigation from './components/Navigation';
-import Protected from './components/Protected';
+import Profile from './components/Profile';
 import Register from './components/Register';
 
 export const UserContext = createContext([]);
@@ -14,52 +15,62 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   const logOutCallback = async () => {
-    await fetch('http://127.0.0.1:4000/logout', {
-      method: 'POST',
-      credentials: 'include', // Needed to include the cookie
-    });
-    // Clear user from context
-    setUser({});
-    // Navigate back to startpage
-    // navigate('/'); // This line is no longer needed
+    try {
+      await axios.post(
+        'http://127.0.0.1:4000/logout',
+        {},
+        { withCredentials: true }
+      );
+      setUser({});
+    } catch (error) {
+      // Handle errors, e.g., set an error state or show an error message
+    }
   };
 
   useEffect(() => {
     async function checkRefreshToken() {
-      const result = await (
-        await fetch('http://127.0.0.1:4000/refresh_token', {
-          method: 'POST',
-          credentials: 'include', // Needed to include the cookie
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      ).json();
-      setUser({
-        accesstoken: result.accesstoken,
-      });
-      setLoading(false);
+      try {
+        const response = await axios.post(
+          'http://127.0.0.1:4000/refresh_token',
+          {},
+          {
+            withCredentials: true, // Needed to include the cookie
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        setUser({
+          accesstoken: response.data.accesstoken,
+        });
+        console.log(user);
+        setLoading(false);
+      } catch (error) {
+        // Handle errors, e.g., set an error state or show an error message
+      }
     }
+
     checkRefreshToken();
   }, []);
 
   if (loading) {
     return <div>Loading ...</div>;
+  } else {
+    return (
+      <>
+        <UserContext.Provider value={[user, setUser]}>
+          <BrowserRouter>
+            <Navigation logOutCallback={logOutCallback} />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/" element={<Content />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </BrowserRouter>
+        </UserContext.Provider>
+      </>
+    );
   }
-
-  return (
-    <UserContext.Provider value={[user, setUser]}>
-      <Navigation logOutCallback={logOutCallback} />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/protected" element={<Protected />} />
-          <Route path="/" element={<Content />} />
-        </Routes>
-      </BrowserRouter>
-    </UserContext.Provider>
-  );
 }
-
 export default App;
